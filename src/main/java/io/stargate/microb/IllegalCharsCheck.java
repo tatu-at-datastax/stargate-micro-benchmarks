@@ -13,12 +13,13 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 
 @BenchmarkMode(Mode.Throughput)
 @State(Scope.Benchmark)
 @Fork(value = 3)
-@Measurement(iterations = 1, time = 3)
+@Measurement(iterations = 2, time = 3)
 @Warmup(iterations = 1, time = 3)
 public class IllegalCharsCheck
 {
@@ -53,21 +54,24 @@ public class IllegalCharsCheck
         FORBIDDEN_PATTERN = Pattern.compile(sb.append("]").toString());
     }
     
+    private final static CharMatcher FORBIDDEN_GUAVA_MATCHER = CharMatcher.anyOf(FORBIDDEN_CHAR_STRING);
 
     // Find some balance; most with no forbidden, one or two with match,
     // including first and last entries
     private static final String[] TEST_STRINGS = new String[] {
-            "basicName", "another one",
+            "basicName",
+            "another one",
             "Foo*",
             "?",
-            "Complete safe & sound!!!",
+            "Completely safe & sound!!!",
             "[nope]",
             "Typical_very",
             "--- Just some more stuff like that ---",
-            "1"
+            "1",
+            "Not complete 'done'"
     };
 
-    private static final int EXP_MATCHES = 2;
+    private static final int EXP_MATCHES = 3;
 
     @Benchmark
     public int defaultNaiveLooping(Blackhole bh) {
@@ -140,6 +144,19 @@ public class IllegalCharsCheck
             }
         }
         return false;
+    }
+
+    @Benchmark
+    public int guavaBasedCheck(Blackhole bh) {
+        int count = 0;
+        for (String term : TEST_STRINGS) {
+            if (_guavaBasedCheck(term)) { ++count; }
+        }
+        return _verifyCount(count);
+    }
+
+    private boolean _guavaBasedCheck(String str) {
+        return FORBIDDEN_GUAVA_MATCHER.matchesAnyOf(str);
     }
 
     @Benchmark
