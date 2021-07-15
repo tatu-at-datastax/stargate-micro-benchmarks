@@ -35,10 +35,15 @@
         <!-- the processor artifact is required only during compilation and 
            does not need to be transitive, hence provided scope
           -->
-	<scope>provided</scope> 
+        <scope>provided</scope> 
       </dependency>
 
       <!-- If we rely on other packages, add them here -->
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>27.0-jre</version>
+      </dependency>
 
     </dependencies>
 
